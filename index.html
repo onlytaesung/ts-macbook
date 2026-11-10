@@ -153,6 +153,9 @@ svg{display:block}
 .lbox{position:absolute;inset:0;z-index:1700;background:#000;cursor:zoom-out}
 .lbox img,.lbox video{position:absolute;left:50%;top:calc(50% + 19px);transform:translate(-50%,-50%);max-width:94%;max-height:calc(100% - 64px);width:auto;height:auto;border-radius:4px;cursor:default;background:#000}
 .lbox video{width:96%;height:calc(100% - 58px);max-width:none;max-height:none;object-fit:contain;border-radius:0;background:transparent}
+.screen.qlopen>*:not(.lbox){visibility:hidden}
+.screen.qlopen{background:#000}
+.lbox video{left:0;top:38px;transform:none;width:100%;height:calc(100% - 38px);will-change:auto}
 .lbox .qlload{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:#bbb;font-size:13px}
 /* 데스크탑 아이콘 */
 .icons{position:absolute;top:40px;right:max(14px,env(safe-area-inset-right,0px));display:grid;gap:10px;justify-items:center;z-index:1}
@@ -1764,12 +1767,11 @@ function openQL(i){ const p=H.photos[i]; if(!p) return; const li=document.getEle
   if(p.kind==="video"){ li.hidden=true; lv.hidden=true; const ld=document.getElementById("qlLoad"); ld.hidden=false; ld.textContent="영상 불러오는 중…";
     if(playing) stop();
     try{ unlockSound(); }catch(err){}
-    const tok=++qlTok;
-    getVidURL(p.id).then(u=>{ if(tok!==qlTok) return; ld.hidden=true; lv.hidden=false; lv.src=u; const pr=lv.play(); if(pr&&pr.catch) pr.catch(()=>{}); })
-      .catch(()=>{ if(tok!==qlTok) return; ld.textContent="영상을 불러오지 못했어요. 다시 눌러주세요."; }); }
+    ++qlTok; ld.hidden=true; lv.hidden=false; lv.preload="auto"; lv.src=src;
+    const pr=lv.play(); if(pr&&pr.catch) pr.catch(()=>{}); }
   else { lv.hidden=true; lv.removeAttribute("src"); li.hidden=false; li.src=src; }
-  document.getElementById("lbox").hidden=false; }
-function closeQL(){ qlTok++; document.getElementById("qlLoad").hidden=true; const lv=document.getElementById("lboxVid"); try{ lv.pause(); }catch(err){} lv.removeAttribute("src"); lv.load(); document.getElementById("lbox").hidden=true; }
+  document.getElementById("lbox").hidden=false; document.getElementById("screen").classList.add("qlopen"); }
+function closeQL(){ document.getElementById("screen").classList.remove("qlopen"); qlTok++; document.getElementById("qlLoad").hidden=true; const lv=document.getElementById("lboxVid"); try{ lv.pause(); }catch(err){} lv.removeAttribute("src"); lv.load(); document.getElementById("lbox").hidden=true; }
 hph.addEventListener("click",e=>{
   if(e.target.closest("#hshrink")){ shrinkNext(); return; }
   if(e.target.closest(".nm2[contenteditable=\"true\"]")){ const it=e.target.closest(".fi[data-i]"); if(it){ hSel=+it.dataset.i; hph.querySelectorAll(".fi").forEach(x=>x.classList.toggle("sel",x===it)); } return; }
