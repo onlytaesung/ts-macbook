@@ -1572,9 +1572,16 @@ function renderChat(){
   nm.textContent=c.name; nm.contentEditable=canEditNotes?"true":"false"; nm.spellcheck=false;
   const av=document.getElementById("chat-av"); av.textContent=c.av; av.style.background=c.color;
   const del=showDelivered(cur);
-  let h=c.log.map((x,i)=>{ const [k,t]=x; if(k==="read"&&del) return "";
-    return k==="when"?`<span class="when" data-i="${i}"${ce}>${escH(t)}</span>`:k==="read"?`<span class="read">${escH(t)}</span>`:`<div class="bub ${k}" data-i="${i}"${ce}>${escH(t)}</div>`; }).join("");
-  h+=(live[cur]||[]).map(([k,t])=>k==="typing"?`<div class="bub in typing"><span>•</span><span>•</span><span>•</span></div>`:k==="read"?`<span class="read">${escH(t)}</span>`:`<div class="bub ${k} new">${escH(t)}</div>`).join("");
+  /* 읽음: 내가 보낸 마지막 말 아래에만, 상대가 답하면 사라짐 */
+  const all=[...c.log.map((x,i)=>({x,i,lg:1})),...(live[cur]||[]).map(x=>({x,lg:0}))];
+  let lastB=-1; all.forEach((e,j)=>{ if(e.x[0]==="in"||e.x[0]==="out") lastB=j; });
+  const showRead=lastB>=0&&all[lastB].x[0]==="out"&&all.slice(lastB+1).some(e=>e.x[0]==="read");
+  let h=all.map((e,j)=>{ const [k,t]=e.x; if(k==="read") return "";
+    let o= k==="typing"?`<div class="bub in typing"><span>•</span><span>•</span><span>•</span></div>`
+      : k==="when"?(e.lg?`<span class="when" data-i="${e.i}"${ce}>${escH(t)}</span>`:`<span class="when">${escH(t)}</span>`)
+      : e.lg?`<div class="bub ${k}" data-i="${e.i}"${ce}>${escH(t)}</div>`:`<div class="bub ${k} new">${escH(t)}</div>`;
+    if(j===lastB&&showRead) o+=`<span class="read">읽음</span>`;
+    return o; }).join("");
   if(canEditNotes){ if(!Array.isArray(c.replies)) c.replies=[];
     h+=`<div class="reveal"><span class="rlab">메시지를 보내면 이 중 하나가 랜덤으로 답장돼요 (독자에게는 안 보여요)</span>${c.replies.map((t,i)=>`<div class="bub in" data-r="${i}"${ce}>${escH(t)}</div>`).join("")}<button class="eadd" data-add="reveal" style="align-self:center">＋ 답장 문구 추가</button></div>`; }
   mlog.innerHTML=h; mlog.classList.toggle("selmode",selMode);
@@ -1635,14 +1642,13 @@ let replyBusy={};
 function sendMsg(){
   const t=msgIn.value.trim(); if(!t||!M.convs[cur]) return; msgIn.value="";
   const id=cur, L=(live[id]=live[id]||[]);
-  for(let k=L.length-1;k>=0;k--) if(L[k][0]==="read") L.splice(k,1);
   L.push(["out",t]); renderChat(); renderConvs();
   if(replyBusy[id]) return;
   const reply=pickReply(id);
   if(!reply){ setTimeout(()=>{ L.push(["read","읽음"]); if(cur===id) renderChat(); },900); return; }
   replyBusy[id]=true;
   setTimeout(()=>{ L.push(["read","읽음"]); if(cur===id) renderChat(); },700);
-  setTimeout(()=>{ for(let k=L.length-1;k>=0;k--) if(L[k][0]==="read") L.splice(k,1); L.push(["typing"]); if(cur===id) renderChat(); },1500);
+  setTimeout(()=>{ L.push(["typing"]); if(cur===id) renderChat(); },1500);
   setTimeout(()=>{ const j=L.findIndex(x=>x[0]==="typing"); if(j>=0) L.splice(j,1); L.push(["in",reply]); replyBusy[id]=false; if(cur===id) renderChat(); renderConvs(); },2900+Math.random()*1400);
 }
 document.getElementById("send").addEventListener("click",sendMsg);
