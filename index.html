@@ -155,7 +155,7 @@ svg{display:block}
 .lbox video{width:96%;height:calc(100% - 58px);max-width:none;max-height:none;object-fit:contain;border-radius:0;background:transparent}
 .screen.qlopen>*:not(.lbox){visibility:hidden}
 .screen.qlopen{background:#000}
-.lbox video{left:0;top:38px;transform:none;width:100%;height:calc(100% - 38px);will-change:auto}
+.lbox video{left:0;right:0;top:38px;bottom:0;margin:auto;transform:none;width:auto;height:auto;max-width:100%;max-height:calc(100% - 38px);object-fit:contain}
 .lbox .qlload{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:#bbb;font-size:13px}
 /* 데스크탑 아이콘 */
 .icons{position:absolute;top:40px;right:max(14px,env(safe-area-inset-right,0px));display:grid;gap:10px;justify-items:center;z-index:1}
